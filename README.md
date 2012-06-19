@@ -1,4 +1,4 @@
 pad
 ===
 
-Source Code for Patch Appearance Dictionary
+Source Code for Patch Appearance Dictionary features.
