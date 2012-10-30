@@ -1,7 +1,6 @@
 #!/usr/bin/python2
 import os
 import imghdr
-from opt import options
 from libsvm_helper import *
 import vivid
 
@@ -11,20 +10,14 @@ from pad_feature import *
 
 DETECTION_THRESHOLD = -0.5
 
-#import numpy as np
-#import pylab as plt
-#import multiprocessing
-#
-#import vivid
-#
-#
-#from feature_source import *
-#
-#from config import ConfigOpt
-#
-#from scipy.misc import imsave
-#
-#from image_annotator import draw_bounding_box
+from argparse import ArgumentParser
+
+parser = ArgumentParser(description="Detect objects in given images")
+parser.add_argument('model_file', type=str, help="The object model")
+parser.add_argument('--source-directory', dest='source_dir',
+                  type=str, default=".", help="Directory holding images to be processed")
+
+options = parser.parse_args()
 
 def detect_object(input_images, object_model):
     fv = vivid.ImageSource(imlist=input_images)
@@ -42,9 +35,11 @@ def detect_object(input_images, object_model):
 
         cell_mags = cell.sum(axis=2)
 
-        cell = cell.reshape((-1,100))
+        cell_mat = cell.view()
 
-        cell_dm = vivid.DeviceMatrix(cell)
+        cell_mat.shape = (cell.shape[0] * cell.shape[1], cell.shape[2])
+
+        cell_dm = vivid.DeviceMatrix(cell_mat)
         
         cell_scores = object_model.classify(cell_dm)
 

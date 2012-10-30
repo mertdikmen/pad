@@ -13,6 +13,9 @@ class PADFeatureSource:
                 vivid.FF_OPTYPE_COSINE)
 
     def get_features(self, frame_no):
+        """
+        Computes the cell histograms of PAD words
+        """
         assignments, weights = self.ff.filter_frame_cuda(frame_no)
 
         apron = self.fm.patch_size / 2
@@ -39,6 +42,7 @@ class PADFeatureModel:
 
         self.block_size = 2 #in terms of cells (non-overlapping)
 
+
     def write(self, file_name):
         """Write the PAD feature model to disk"""
         fp = open(file_name, 'w+')
@@ -64,6 +68,7 @@ class PADObjectModel:
         fp.close()
 
     def classify(self, block_feature_image):
+        """Convolve the classifier with the PAD cell histogram"""
         if (self.svm_dm == None):
             self.svm_dm = vivid.DeviceMatrix(
                     self.svm.w[:-1].reshape((-1, self.fm.dictionary_size)))
@@ -71,3 +76,13 @@ class PADObjectModel:
         retval = vivid.pwdot_cuda(block_feature_image, self.svm_dm)
 
         return retval
+
+    def subwindow_feature(cell_histograms, cell_mags, cell_ind_y, cell_ind_x):
+        subwindow_cm = cell_mags[
+                cell_ind_y : cell_ind_y + self.shape[0],
+                cell_ind_x : cell_ind_x + self.shape[1]]
+
+        subwindow_ch = cell_histograms[
+                cell_ind_y : cell_ind_y + self.shape[0],
+                cell_ind_x : cell_ind_x + self.shape[1], :]
+
